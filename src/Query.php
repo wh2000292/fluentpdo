@@ -127,10 +127,14 @@ class Query
         $query = new Update($this, $table);
 
         $query->set($set);
-        if ($primaryKey) {
-            $primaryKeyName = $this->getStructure()->getPrimaryKey($this->table);
-            $query = $query->where($primaryKeyName, $primaryKey);
+        
+        if(empty($primaryKey))
+        {
+            return false;
         }
+        $primaryKeyName = $this->getStructure()->getPrimaryKey($this->table);
+        $query = $query->where($primaryKeyName, $primaryKey);
+        
 
         return $query;
     }
@@ -151,11 +155,14 @@ class Query
         $table = $this->getFullTableName();
 
         $query = new Delete($this, $table);
-
-        if ($primaryKey) {
-            $primaryKeyName = $this->getStructure()->getPrimaryKey($this->table);
-            $query = $query->where($primaryKeyName, $primaryKey);
+        if(empty($primaryKey))
+        {
+            return false;
         }
+
+        $primaryKeyName = $this->getStructure()->getPrimaryKey($this->table);
+        $query = $query->where($primaryKeyName, $primaryKey);
+        
 
         return $query;
     }
@@ -171,7 +178,10 @@ class Query
     public function deleteFrom(?string $table = null, ?int $primaryKey = null): Delete
     {
         $args = func_get_args();
-
+        if(empty($primaryKey))
+        {
+            return false;
+        }
         return call_user_func_array([$this, 'delete'], $args);
     }
 
@@ -183,6 +193,36 @@ class Query
         return $this->pdo;
     }
 
+
+    public function fquery($sql) {
+		$result = $this->pdo->query($sql);
+        $data = $result->fetchAll(PDO::FETCH_ASSOC);
+		return $data;
+    }
+	
+	public function ffetch($sql) {
+		$result = $this->pdo->query($sql);
+        $data = $result->fetch(PDO::FETCH_ASSOC);
+		return $data;
+    }
+	
+	public function fpre_query($sql,$params) {
+		$sth = $this->pdo->prepare($sql);
+		$sth->execute($params);
+		$data = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+		return $data;
+    }
+	
+	public function fexec($sql) {
+		$res = $this->pdo->exec($sql);
+		if($res){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
+    }
+    
     /**
      * @return Structure
      */
